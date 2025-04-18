@@ -1,51 +1,63 @@
 import streamlit as st
 import nltk
+import os
 import string
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
-# NLTK setup
-nltk.download('punkt')
-nltk.download('stopwords')
+# ---------- 🛠 Download NLTK resources to local folder ----------
+nltk_data_dir = os.path.join(os.getcwd(), 'nltk_data')
+os.makedirs(nltk_data_dir, exist_ok=True)
+nltk.data.path.append(nltk_data_dir)
 
-# Load the custom data
-with open("data/about_me.txt", "r") as file:
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', download_dir=nltk_data_dir)
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', download_dir=nltk_data_dir)
+
+# ---------- 📄 Load your data ----------
+with open("data/about_me.txt", "r", encoding="utf-8") as file:
     raw_text = file.read()
 
 sentences = sent_tokenize(raw_text)
+
+# ---------- 🧠 NLP Preprocessing ----------
 stemmer = PorterStemmer()
 stop_words = set(stopwords.words("english"))
 
-# Preprocessing function
 def preprocess(text):
     tokens = word_tokenize(text.lower())
     return " ".join([stemmer.stem(word) for word in tokens if word not in stop_words and word not in string.punctuation])
 
-processed_sentences = [preprocess(sent) for sent in sentences]
+processed_sentences = [preprocess(sentence) for sentence in sentences]
 
-# Vectorize
+# ---------- 🔍 TF-IDF + Cosine Similarity ----------
 vectorizer = TfidfVectorizer()
 sentence_vectors = vectorizer.fit_transform(processed_sentences)
 
-# Response function
 def get_response(user_input):
-    user_input_processed = preprocess(user_input)
-    user_vector = vectorizer.transform([user_input_processed])
-    similarity = cosine_similarity(user_vector, sentence_vectors)
+    processed_input = preprocess(user_input)
+    input_vector = vectorizer.transform([processed_input])
+    similarity = cosine_similarity(input_vector, sentence_vectors)
     max_sim_index = similarity.argmax()
-    max_sim_value = similarity[0][max_sim_index]
+    max_sim_score = similarity[0][max_sim_index]
 
-    if max_sim_value < 0.2:
-        return "I'm sorry, I couldn't find that information."
-    else:
-        return sentences[max_sim_index]
+    if max_sim_score < 0.2:
+        return "I'm sorry, I couldn't find anything related to that."
+    return sentences[max_sim_index]
 
-# Streamlit UI
+# ---------- 💬 Streamlit UI ----------
 st.title("Shubham's Personal Chatbot 🤖")
-st.write("Ask anything related to Shubham!")
+st.write("Ask anything based on what's written about Shubham!")
 
 user_input = st.text_input("You:", "")
 
