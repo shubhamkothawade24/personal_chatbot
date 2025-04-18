@@ -1,35 +1,37 @@
 import streamlit as st
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer, util
+import os
 
-# Load bio from file
+# Load bio
 with open("data/about_me.txt", "r", encoding="utf-8") as f:
     raw_text = f.read()
 
-# Basic sentence splitting
+# Split into sentences (answers)
 sentences = [s.strip() for s in raw_text.split('.') if s.strip()]
 
-# TF-IDF processing
-vectorizer = TfidfVectorizer()
-sentence_vectors = vectorizer.fit_transform(sentences)
+# Load transformer model
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# Get chatbot response
-def get_response(user_input):
-    user_vec = vectorizer.transform([user_input])
-    similarity_scores = cosine_similarity(user_vec, sentence_vectors)
-    max_score_index = similarity_scores.argmax()
-    max_score = similarity_scores[0, max_score_index]
-    
-    if max_score < 0.2:
-        return "🤖 Sorry, I couldn't find anything related to that."
-    return sentences[max_score_index]
+# Embed bio sentences
+sentence_embeddings = model.encode(sentences, convert_to_tensor=True)
 
 # Streamlit UI
-st.set_page_config(page_title="Shubham Chatbot", layout="centered")
+st.set_page_config(page_title="Personal Chatbot", layout="centered")
 st.title("🤖 Personal Chatbot")
-st.write("Ask me questions based on Shubham's profile!")
+st.write("Ask questions based on Shubham's bio!")
 
-user_input = st.text_input("🔎 Your question")
-if user_input:
-    answer = get_response(user_input)
-    st.markdown(f"**🤖 Answer:** {answer}")
+user_question = st.text_input("💬 Ask something:")
+
+if user_question:
+    # Embed user query
+    query_embedding = model.encode(user_question, convert_to_tensor=True)
+
+    # Find most similar sentence from the bio
+    scores = util.cos_sim(query_embedding, sentence_embeddings)[0]
+    best_score = float(scores.max())
+    best_index = int(scores.argmax())
+
+    if best_score < 0.3:
+        st.write("🤖 Sorry, I couldn't find anything related to that.")
+    else:
+        st.write(f"**🤖 Answer:** {sentences[best_index]}")
