@@ -26,7 +26,7 @@ def get_response(user_input):
 
 # Streamlit UI
 st.set_page_config(page_title="Shubham Chatbot", layout="centered")
-st.title("🤖 Personal Chatbot")
+st.title("🤖 Shubham's Personal Chatbot")
 st.write("Ask me questions based on Shubham's profile!")
 
 user_input = st.text_input("🔎 Your question")
