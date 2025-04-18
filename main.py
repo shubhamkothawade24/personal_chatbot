@@ -17,7 +17,7 @@ sentence_embeddings = model.encode(sentences, convert_to_tensor=True)
 
 # Streamlit UI
 st.set_page_config(page_title="Personal Chatbot", layout="centered")
-st.title("🤖 Personal Chatbot")
+st.title("🤖Shubham's Personal Chatbot")
 st.write("Ask questions based on Shubham's bio!")
 
 user_question = st.text_input("💬 Ask something:")
