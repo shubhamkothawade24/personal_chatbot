@@ -1,5 +1,5 @@
 import streamlit as st
-
+import nltk
 import string
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -8,13 +8,11 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
 # NLTK setup
-import nltk
 nltk.download('punkt')
 nltk.download('stopwords')
 
-
 # Load the custom data
-with open("about_me.txt", "r") as file:
+with open("data/about_me.txt", "r") as file:
     raw_text = file.read()
 
 sentences = sent_tokenize(raw_text)
